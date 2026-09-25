@@ -1,0 +1,34 @@
+{
+  "name": "demo",
+  "instructions": "Demo server. Copy this file to <config_dir>/MultiMCP/demo.json and run `multimcp demo`.",
+  "commands": [
+    {
+      "name": "greet",
+      "description": "Print a greeting",
+      "argv": ["echo", "hello {who}"],
+      "params": {
+        "who": {
+          "type": "string",
+          "description": "Who to greet",
+          "required": false,
+          "default": "world"
+        }
+      },
+      "timeout_secs": 30,
+      "read_only": true
+    },
+    {
+      "name": "disk_usage",
+      "description": "Show disk usage for a path",
+      "argv": ["du", "-sh", "{path}"],
+      "params": {
+        "path": {
+          "type": "string",
+          "description": "Path to measure"
+        }
+      },
+      "timeout_secs": 60,
+      "read_only": true
+    }
+  ]
+}
