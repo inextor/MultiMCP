@@ -5,7 +5,8 @@ defines an MCP server whose tools are shell commands with typed parameters.
 The binary serves one file at a time over stdio:
 
 ```sh
-multimcp backup        # serves <config_dir>/MultiMCP/backup.json
+multimcp init backup   # creates <config_dir>/MultiMCP/backup.json with an example
+multimcp backup        # serves it
 ```
 
 `<config_dir>` is `$XDG_CONFIG_HOME` on Linux (`~/.config` by default),
@@ -14,7 +15,8 @@ flag and no server discovery: the name is required, and the file must exist.
 
 ## Config format
 
-One file per server, JSON only:
+One file per server, JSON only. Scaffold one with `multimcp init <name>`
+(it refuses to overwrite an existing file) and edit the commands:
 
 ```json
 {

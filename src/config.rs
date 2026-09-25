@@ -259,26 +259,42 @@ pub fn save_server_file(path: &std::path::Path, def: &ServerDefinition) -> Resul
     Ok(())
 }
 
-pub fn missing_file_hint(path: &std::path::Path) -> String {
+/// Example server definition used by `init` and the missing-file hint.
+pub fn example_definition(name: &str) -> ServerDefinition {
+    serde_json::from_value(serde_json::json!({
+        "name": name,
+        "instructions": "Example server. Describe how to use these tools.",
+        "commands": [{
+            "name": "greet",
+            "description": "Print a greeting",
+            "argv": ["echo", "hello {who}"],
+            "params": {
+                "who": {"type": "string", "description": "Who to greet",
+                        "required": false, "default": "world"}
+            },
+            "timeout_secs": 30,
+            "read_only": true
+        }]
+    }))
+    .expect("example definition must be valid")
+}
+
+/// Create a new server file with example content. Refuses to overwrite.
+pub fn init_server_file(path: &std::path::Path, name: &str) -> Result<()> {
+    if path.exists() {
+        bail!("server file {} already exists", path.display());
+    }
+    let def = example_definition(name);
+    def.validate()?;
+    save_server_file(path, &def)?;
+    Ok(())
+}
+
+pub fn missing_file_hint(path: &std::path::Path, name: &str) -> String {
     format!(
-        "no such server file: {}\ncreate it with content like:\n{}",
+        "no such server file: {}\nrun `multimcp init {name}` to create it, or create it by hand:\n{}",
         path.display(),
-        serde_json::to_string_pretty(&serde_json::json!({
-            "name": "example",
-            "instructions": "Example server. Describe how to use these tools.",
-            "commands": [{
-                "name": "greet",
-                "description": "Print a greeting",
-                "argv": ["echo", "hello {who}"],
-                "params": {
-                    "who": {"type": "string", "description": "Who to greet",
-                            "required": false, "default": "world"}
-                },
-                "timeout_secs": 30,
-                "read_only": true
-            }]
-        }))
-        .unwrap()
+        serde_json::to_string_pretty(&example_definition("example")).unwrap()
     )
 }
 
@@ -370,5 +386,27 @@ mod tests {
             ],
         };
         assert!(def.validate().is_err());
+    }
+    #[test]
+    fn init_writes_valid_example_and_refuses_overwrite() {
+        let dir = std::env::temp_dir().join(format!("multimcp-init-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&dir);
+        let path = dir.join("MultiMCP").join("demo.json");
+        init_server_file(&path, "demo").unwrap();
+        let def = load_server_file(&path).unwrap();
+        assert_eq!(def.name, "demo");
+        assert_eq!(def.commands.len(), 1);
+        assert_eq!(def.commands[0].name, "greet");
+        // Second init must not clobber.
+        assert!(init_server_file(&path, "demo").is_err());
+        std::fs::remove_dir_all(&dir).ok();
+    }
+
+    #[test]
+    fn missing_hint_points_at_init() {
+        let path = std::path::Path::new("/x/MultiMCP/nope.json");
+        let hint = missing_file_hint(path, "nope");
+        assert!(hint.contains("multimcp init nope"));
+        assert!(hint.contains("/x/MultiMCP/nope.json"));
     }
 }
