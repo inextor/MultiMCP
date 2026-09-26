@@ -1,0 +1,32 @@
+{
+  "name": "mysql",
+  "instructions": "MySQL server with fixed connection (root@127.0.0.1). Pick a database and a SQL query per call.",
+  "commands": [
+    {
+      "name": "query",
+      "description": "Run a SQL query against the given database (mysql -uroot -psdfgsdfg -h127.0.0.1)",
+      "argv": [
+        "mysql",
+        "-uroot",
+        "-psdfgsdfg",
+        "-h127.0.0.1",
+        "-D",
+        "{database}",
+        "-e",
+        "{query}"
+      ],
+      "params": {
+        "database": {
+          "type": "string",
+          "description": "Database name to run the query against"
+        },
+        "query": {
+          "type": "string",
+          "description": "SQL query to execute (e.g. SELECT * FROM users LIMIT 10)"
+        }
+      },
+      "timeout_secs": 60,
+      "read_only": false
+    }
+  ]
+}
